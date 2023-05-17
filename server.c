@@ -8,8 +8,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <ctype.h>
+
 // Tamanho do buffer
-#define BUFSZ 1024
+#define BUFSZ 9000
 
 // Tamanho da fila de conexões pendentes
 #define maxQueueLimit 128
@@ -19,6 +21,13 @@ void usage(int argc, char **argv) {
   printf("usage: %s <v4|v6> <server port>\n", argv[0]);
   printf("example: %s v4 51511\n", argv[0]);
   exit(EXIT_FAILURE);
+}
+void stringToUpper(char *str) {
+  int i = 0;
+  while (str[i] != '\0') {
+    str[i] = toupper(str[i]);
+    i++;
+  }
 }
 
 struct client_data {
@@ -111,38 +120,150 @@ int main(int argc, char **argv) {
     addrtostr(caddr, caddrstr, BUFSZ);
     printf("[log] connection from %s\n", caddrstr);
 
-    //Selecionar arquivo
+
     //Processar arquivo inserido
     //Enviar arquivo
 
+
     char buf[BUFSZ];
-    memset(buf, 0, BUFSZ);
-    size_t count = recv(clientSocket, buf, BUFSZ - 1, 0);
+    char serverBuf[BUFSZ];
+    memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
 
-    printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
-    if (0 == strcmp(buf, "##kill\n")) {
-      exit(0);
+    char *filename;
+    char *command;
+    //Recebe os dados do cliente
+
+
+    while (1) {
+
+      recv(clientSocket, buf, BUFSZ - 1, 0);
+
+      int bytesReceived = recv(clientSocket, buf, BUFSZ - 1, 0);
+
+      if (bytesReceived > 0) {
+        buf[bytesReceived] = '\0'; // Adicione o caractere nulo no final do buffer
+
+        printf("[receved]:  %s", buf);
+        command = strtok(buf, " ");
+        filename = strtok(NULL, " ");
+        stringToUpper(command);
+
+      }
+
+
+      if (command != NULL && strcmp(command, "EXIT") == 0) {
+        close(clientSocket);
+        break;
+      }
+
+      // printf("[msg] %s: %s\n", caddrstr, buf);
+
+      if (command != NULL && (strcmp(buf, "SELECT") == 0)) {
+        if (command != NULL)
+          strcpy(serverBuf, filename);
+
+      }
+
+
+
+      //RECEBER ARQUIVO
+      if (command != NULL && (strcmp(buf, "SEND") == 0)) {
+        // Lê o arquivo e envia ao servidor
+
+        int n;
+
+        // Verifica se o arquivo existe
+        if (access(serverBuf, F_OK) == 0) { //
+          // Arquivo existe
+
+          FILE *file = fopen(serverBuf, "w");
+          if (file == NULL) {
+            printf("Error opening file\n");
+            return -1;
+          }
+          while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
+            fwrite(buf, sizeof(char), n, file);
+          }
+          if (n < 0) {
+            logexit("Error reading from socket");
+          }
+          fclose(file);
+
+          printf("file %s overwritten\n", serverBuf);
+
+        } else {
+
+          //cria o novo arquivo
+          FILE *file = fopen(serverBuf, "w");
+          if (file == NULL) {
+            printf("Error opening file\n");
+            return -1;
+          }
+          while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
+            fwrite(buf, sizeof(char), n, file);
+          }
+          if (n < 0) {
+            logexit("Error reading from socket");
+          }
+          fclose(file);
+
+          printf("file %s received\n", serverBuf);
+
+        }
+
+      }
+
+      memset(buf, 0, BUFSZ);
+
+
+      //SELECT
+      // char *result = strstr(buf, "select");
+
+      // if (result != NULL) {
+
+
+
+      //   sprintf(buf, "File received successfully\n %.1000s\n", caddrstr);
+      //   count = send(clientSocket, buf, strlen(buf) + 1, 0);
+      //   // send(clientSocket, "File received successfully\n", strlen(buf) + 1, 0);
+
+      //   // printf("[msg33333]: %s\n", buf);
+      //   if (count != strlen(buf) + 1) {
+      //     logexit("send");
+      //   }
+
+      // }
+
+
+
+      // if(arquivo recebido){
+      //   sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
+      //   count = send(clientSocket, buf, strlen(buf) + 1, 0);
+      // }
+
+      // count = send(clientSocket, buf, strlen(buf) + 1, 0);
+
+
+      // // }
+
+
+
+
+      // Inicia a criação de threads
+
+      // struct client_data * cdata = malloc(sizeof( * cdata));
+      // if (!cdata) {
+      //   logexit("malloc");
+      // }
+      // cdata -> clientSocket = clientSocket;
+      // memcpy( &(cdata -> storage), & clientStorage, sizeof(clientStorage));
+
+      // pthread_t tid;
+      // pthread_create( & tid, NULL, client_thread, cdata);
     }
 
-    sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
-    count = send(clientSocket, buf, strlen(buf) + 1, 0);
-    if (count != strlen(buf) + 1) {
-      logexit("send");
-    }
-    close(clientSocket);
-
-    // Inicia a criação de threads
-
-    // struct client_data * cdata = malloc(sizeof( * cdata));
-    // if (!cdata) {
-    //   logexit("malloc");
-    // }
-    // cdata -> clientSocket = clientSocket;
-    // memcpy( &(cdata -> storage), & clientStorage, sizeof(clientStorage));
-
-    // pthread_t tid;
-    // pthread_create( & tid, NULL, client_thread, cdata);
+    close(newSocket);
   }
-
   exit(EXIT_SUCCESS);
 }
+
