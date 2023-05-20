@@ -32,4 +32,10 @@ bool containsWord(const char *str, const char *word);
 
 void formatMessage(char *command, char *message, char *result);
 
-void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize);
+//void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize);
+void extractCommandAndMessage(const char *input, char *command, char *message);
+
+void createFileWithMessage(const char *message, const char *filename);
+
+void removeNullCharacters(char *string);
+bool fileExists(const char *filename);

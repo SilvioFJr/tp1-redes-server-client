@@ -144,8 +144,8 @@ int main(int argc, char **argv) {
         //Trata a mensagem recebida
         printf("[receved]:  %s\n", buf);
 
-        // //teste end char
-        // if (containsWord(buf, "\n")) {
+        //teste end char
+        // if (containsWord(buf, END_CHAR)) {
         //   printf("sim END_CHAR\n");
         //   // close(clientSocket);
         //   // break;
@@ -155,13 +155,16 @@ int main(int argc, char **argv) {
         //   printf("não\n");
         // }
 
-
         removeNullChar(buf);
-        extractCommandAndMessage(buf, command, message, BUFSIZ, BUFSIZ);
+        // extractCommandAndMessage(buf, command, message, BUFSIZ, BUFSIZ);
+        extractCommandAndMessage(buf, command, message);
         printf("[command]:  %s\n", command);
         printf("[message]:  %s\n", message);
 
+
         stringToUpper(command);
+
+
         //Desconectar cliente
         if (containsWord(command, EXIT)) {
           printf("connection closed\n");
@@ -176,92 +179,36 @@ int main(int argc, char **argv) {
           strcpy(filename, message);
           printf("[filename]:  %s\n", filename);
         }
+        memset(message, 0, BUFSZ);
       }
 
 
 
       // RECEBER ARQUIVO
+
+      // Verifica se o arquivo existe
       if (containsWord(command, SEND)) {
-        // Verifica se o arquivo existe
-        if (access(filename, F_OK) == 0) {
-          // Arquivo existe
+        char *fname = "testeeeeeee.txt";
+        char *MENSAGEM = message;
+        createFileWithMessage(MENSAGEM, fname);
 
-          FILE *file = fopen("recebido.txt", "w");
-          if (file == NULL) {
-            printf("Error opening file\n");
-            return -1;
-          }
-          // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
-          // }
-          fwrite(message, sizeof(char), BUFSIZ, file);
-          // if (n < 0) {
-          //   logexit("Error reading from socket");
-          // }
 
-          fclose(file);
-
+        if (fileExists(fname)) {
+          char *fname = "recebidooooo.txt";
+          char *MENSAGEM = message;
+          createFileWithMessage(MENSAGEM, fname);
           printf("file %s overwritten\n", filename);
-
         } else {
-
-          //cria o novo arquivo
-          FILE *file = fopen("recebido.txt", "w");
-          if (file == NULL) {
-            printf("Error opening file\n");
-            return -1;
-          }
-          // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
-          // }
-          size_t elementsWritten = fwrite(message, sizeof(char), BUFSIZ, file);
-
-          if (elementsWritten != BUFSIZ) {
-            fprintf(stderr, "Erro ao gravar os dados no arquivo.\n");
-            exit(EXIT_FAILURE);
-          }
-          // if (n < 0) {
-          //   logexit("Error reading from socket");
-          // }
-          fclose(file);
-
-          printf("file %s received", filename);
-
+          char *fname = "recebidooooo.txt";
+          char *MENSAGEM = message;
+          createFileWithMessage(MENSAGEM, fname);
+          printf("file %s received\n", filename);
         }
 
+        memset(message, 0, BUFSZ);
       }
 
       memset(buf, 0, BUFSZ);
-
-
-      //SELECT
-      // char *result = strstr(buf, "select");
-
-      // if (result != NULL) {
-
-
-
-      //   sprintf(buf, "File received successfully\n %.1000s\n", caddrstr);
-      //   count = send(clientSocket, buf, strlen(buf) + 1, 0);
-      //   // send(clientSocket, "File received successfully\n", strlen(buf) + 1, 0);
-
-      //   // printf("[msg33333]: %s\n", buf);
-      //   if (count != strlen(buf) + 1) {
-      //     logexit("send");
-      //   }
-
-      // }
-
-
-
-      // if(arquivo recebido){
-      //   sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
-      //   count = send(clientSocket, buf, strlen(buf) + 1, 0);
-      // }
-
-      // count = send(clientSocket, buf, strlen(buf) + 1, 0);
-
-
-      // // }
-
 
 
 

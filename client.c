@@ -102,6 +102,7 @@ int main(int argc, char **argv) {
       }
 
       close(newSocket);
+      memset(message, 0, BUFSZ); // Inicia Buffer com 0
       break;
     }
 
@@ -119,8 +120,13 @@ int main(int argc, char **argv) {
 
         // Avisa o servidor que um arquivo foi selecionado????
         //Remove o '\n' e coloca o 'EOT'
-        // changeLastCharacter(bufferToSlice, '\n', END_CHAR);
+        // changeLastCharacter(filebuffer, '\0', END_CHAR);
+        printf("%s ANTES\n", filebuffer);
         count = send(newSocket, message, strlen(message) + 1, 0);
+
+
+
+
 
         if (count != strlen(message) + 1) { // Erro no envio
           logexit("send");
@@ -134,6 +140,7 @@ int main(int argc, char **argv) {
           printf("%s does not exist\n", filename);
         }
       }
+      memset(message, 0, BUFSZ); // Inicia Buffer com 0
 
     }
 
@@ -146,24 +153,27 @@ int main(int argc, char **argv) {
       if (filebuffer != NULL) {
 
         //Remove o '\0' e coloca o 'EOT'
-        // changeLastCharacter(filebuffer, '\0', END_CHAR);
 
         //Adiciona o comando e nome do arquino no início da mensagem
         // char message[BUFSIZ]
         // strcat(message, str1);
 
         formatMessage(command, filebuffer, message);
+        printf("%s DEPOIS\n", message);
+        changeLastCharacter(message, '\0', END_CHAR);
 
         count = send(newSocket, message, strlen(message) + 1, 0); // Envia dados para o servidor, o terceiro paramero é o tamanho enviado, o /0 é o +1
 
         if (count != strlen(message) + 1) { // Erro no envio
           logexit("send");
         }
+        printf("file %s received\n", filename);
       } else {
         printf("no file selected!\n");
       }
 
 
+      memset(message, 0, BUFSZ); // Inicia Buffer com 0
     }
 
 

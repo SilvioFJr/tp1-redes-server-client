@@ -172,7 +172,34 @@ void formatMessage(char *command, char *message, char *result) {
 // }
 
 
-void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize) {
+// void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize) {
+//     const char *commandStart = strchr(input, '[');
+//     const char *commandEnd = strstr(input, "]*");
+//     const char *messageStart = strstr(input, "*[");
+//     const char *messageEnd = strrchr(input, ']');
+
+//     if (commandStart && commandEnd && messageStart && messageEnd && commandStart < commandEnd && messageStart < messageEnd) {
+//         commandStart++; // Pula o caractere '['
+//         size_t commandLength = commandEnd - commandStart;
+//         if (commandLength < commandSize) {
+//             strncpy(command, commandStart, commandLength);
+//             command[commandLength] = '\0';
+//         }
+
+//         messageStart += 2; // Pula o delimitador "**["
+//         size_t messageLength = messageEnd - messageStart;
+//         if (messageLength < messageSize) {
+//             strncpy(message, messageStart, messageLength);
+//             message[messageLength] = '\0';
+//         }
+//     } else {
+//         command[0] = '\0';
+//         message[0] = '\0';
+//     }
+// }
+
+
+void extractCommandAndMessage(const char *input, char *command, char *message) {
     const char *commandStart = strchr(input, '[');
     const char *commandEnd = strstr(input, "]*");
     const char *messageStart = strstr(input, "*[");
@@ -181,20 +208,61 @@ void extractCommandAndMessage(const char *input, char *command, char *message, s
     if (commandStart && commandEnd && messageStart && messageEnd && commandStart < commandEnd && messageStart < messageEnd) {
         commandStart++; // Pula o caractere '['
         size_t commandLength = commandEnd - commandStart;
-        if (commandLength < commandSize) {
-            strncpy(command, commandStart, commandLength);
-            command[commandLength] = '\0';
-        }
+        strncpy(command, commandStart, commandLength);
+        command[commandLength] = '\0';
 
         messageStart += 2; // Pula o delimitador "**["
         size_t messageLength = messageEnd - messageStart;
-        if (messageLength < messageSize) {
-            strncpy(message, messageStart, messageLength);
-            message[messageLength] = '\0';
-        }
+        strncpy(message, messageStart, messageLength);
+        message[messageLength] = '\0';
     } else {
         command[0] = '\0';
         message[0] = '\0';
+    }
+}
+
+
+
+
+void createFileWithMessage(const char *message, const char *filename) {
+    // Abre o arquivo no modo de escrita
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
+
+    
+    // Escreve a mensagem no arquivo
+    fprintf(file, "%s", message);
+
+    // Fecha o arquivo
+    fclose(file);
+
+    printf("Arquivo criado com sucesso: %s\n", filename);
+}
+
+void removeNullCharacters(char *string) {
+    int i, j;
+    int len = strlen(string);
+
+    for (i = 0, j = 0; i < len; i++) {
+        if (string[i] != '\0') {
+            string[j] = string[i];
+            j++;
+        }
+    }
+
+    string[j] = '\0';
+}
+
+bool fileExists(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file != NULL) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
     }
 }
 
