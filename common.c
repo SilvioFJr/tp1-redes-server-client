@@ -143,23 +143,28 @@ void formatMessage(char *command, char *message, char *result) {
 }
 
 
-void extractCommandAndMessage(const char *input, char *command, char *message) {
+void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize) {
     const char *delimiter = "**";
-    const char *start = strstr(input, '[');
+    const char *start = strchr(input, '[');
     const char *end = strstr(input, delimiter);
 
-    if (start && end) {
-        start += strlen("[");
-        size_t commandLength = end - start;
-        strncpy(command, start, commandLength);
-        command[commandLength] = '\0';
+    if (start && end && start < end) {
+        start++; // Pula o caractere '['
+        size_t commandLength = end - start - 1;
+        if (commandLength < commandSize) {
+            strncpy(command, start, commandLength);
+            command[commandLength] = '\0';
+        }
 
         const char *messageStart = end + strlen(delimiter);
         size_t messageLength = strlen(messageStart) - strlen("]");
-        strncpy(message, messageStart, messageLength);
-        message[messageLength] = '\0';
+        if (messageLength < messageSize) {
+            strncpy(message, messageStart, messageLength);
+            message[messageLength] = '\0';
+        }
     } else {
         command[0] = '\0';
         message[0] = '\0';
     }
 }
+

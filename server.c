@@ -126,60 +126,45 @@ int main(int argc, char **argv) {
     printf("[log]: connection from %s\n", caddrstr);
 
 
-    //Processar arquivo inserido
-    //Enviar arquivo
 
 
     char buf[BUFSZ];
     char serverBuf[BUFSZ];
     memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
 
-    char *filename;
-    char *command;
-    // char *word = "exit\n";
-    //Recebe os dados do cliente
-
-
     while (1) {
-      char command2[BUFSIZ];
+      char command[BUFSIZ];
       char message[BUFSIZ];
+      char filename[BUFSIZ];
 
       int bytesReceived = recv(clientSocket, buf, BUFSZ - 1, 0);
 
       if (bytesReceived > 0) {
-        // buf[bytesReceived] = '\0'; // Adicione o caractere nulo no final do buffer
 
+        //Trata a mensagem recebida
         printf("[receved]:  %s\n", buf);
-        // command = buf;
         removeNullChar(buf);
-        // extractCommandAndMessage(buf, command2, message);
-        command = strtok(buf, " ");
-        filename = strtok(NULL, " ");
-        stringToUpper(command);
-        // removeNewline(command);
+        extractCommandAndMessage(buf, command, message);
+        printf("[command]:  %s\n", command);
+        printf("[message]:  %s\n", message);
 
+        stringToUpper(command);
 
         //Desconectar cliente
-        if (containsWord(command2, EXIT)) {
-
+        if (containsWord(command, EXIT)) {
           printf("connection closed\n");
           close(clientSocket);
-          printf("Comando: %s ----------------\n", command);
           break;
         }
       }
 
-
-
-      // //guardar nome do arquivo......
-      // if (containsWord(command, SELECT)) {
-      //   if (filename != NULL) {
-      //     strcpy(serverBuf, filename);
-      //     printf("passei aqui >> %s\n", filename);
-
-      //   }
-
-      // }
+      //guardar nome do arquivo......
+      if (containsWord(command, SELECT)) {
+        if (filename != NULL) {
+          strcpy(filename, message);
+          printf("[filename]:  %s\n", filename);
+        }
+      }
 
 
 
@@ -286,7 +271,7 @@ int main(int argc, char **argv) {
       // pthread_create( & tid, NULL, client_thread, cdata);
     }
 
-    printf("disponível\n");
+    printf("------------------ SERVIDOR DISPONÍVEL ---------------------------\n");
 
   }
 
