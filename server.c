@@ -17,6 +17,11 @@
 #define maxQueueLimit 128
 
 
+//COMANDOS
+#define SELECT "SELECT"
+#define SEND "SEND"
+#define EXIT "EXIT"
+
 void usage(int argc, char **argv) {
   printf("usage: %s <v4|v6> <server port>\n", argv[0]);
   printf("example: %s v4 51511\n", argv[0]);
@@ -118,7 +123,7 @@ int main(int argc, char **argv) {
 
     char caddrstr[BUFSZ];
     addrtostr(caddr, caddrstr, BUFSZ);
-    printf("[log] connection from %s\n", caddrstr);
+    printf("[log]: connection from %s\n", caddrstr);
 
 
     //Processar arquivo inserido
@@ -131,87 +136,106 @@ int main(int argc, char **argv) {
 
     char *filename;
     char *command;
+    // char *word = "exit\n";
     //Recebe os dados do cliente
 
 
     while (1) {
-
-      recv(clientSocket, buf, BUFSZ - 1, 0);
+      char command2[BUFSIZ];
+      char message[BUFSIZ];
 
       int bytesReceived = recv(clientSocket, buf, BUFSZ - 1, 0);
 
       if (bytesReceived > 0) {
-        buf[bytesReceived] = '\0'; // Adicione o caractere nulo no final do buffer
+        // buf[bytesReceived] = '\0'; // Adicione o caractere nulo no final do buffer
 
-        printf("[receved]:  %s", buf);
+        printf("[receved]:  %s\n", buf);
+        // command = buf;
+        removeNullChar(buf);
+        // extractCommandAndMessage(buf, command2, message);
         command = strtok(buf, " ");
         filename = strtok(NULL, " ");
         stringToUpper(command);
-
-      }
-
-
-      if (command != NULL && strcmp(command, "EXIT") == 0) {
-        close(clientSocket);
-        break;
-      }
-
-      // printf("[msg] %s: %s\n", caddrstr, buf);
-
-      if (command != NULL && (strcmp(buf, "SELECT") == 0)) {
-        if (command != NULL)
-          strcpy(serverBuf, filename);
-
-      }
+        // removeNewline(command);
 
 
+        //Desconectar cliente
+        if (containsWord(command2, EXIT)) {
 
-      //RECEBER ARQUIVO
-      if (command != NULL && (strcmp(buf, "SEND") == 0)) {
-        // Lê o arquivo e envia ao servidor
-
-        int n;
-
-        // Verifica se o arquivo existe
-        if (access(serverBuf, F_OK) == 0) { //
-          // Arquivo existe
-
-          FILE *file = fopen(serverBuf, "w");
-          if (file == NULL) {
-            printf("Error opening file\n");
-            return -1;
-          }
-          while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
-            fwrite(buf, sizeof(char), n, file);
-          }
-          if (n < 0) {
-            logexit("Error reading from socket");
-          }
-          fclose(file);
-
-          printf("file %s overwritten\n", serverBuf);
-
-        } else {
-
-          //cria o novo arquivo
-          FILE *file = fopen(serverBuf, "w");
-          if (file == NULL) {
-            printf("Error opening file\n");
-            return -1;
-          }
-          while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
-            fwrite(buf, sizeof(char), n, file);
-          }
-          if (n < 0) {
-            logexit("Error reading from socket");
-          }
-          fclose(file);
-
-          printf("file %s received\n", serverBuf);
-
+          printf("connection closed\n");
+          close(clientSocket);
+          printf("Comando: %s ----------------\n", command);
+          break;
         }
-
       }
+
+
+
+      // //guardar nome do arquivo......
+      // if (containsWord(command, SELECT)) {
+      //   if (filename != NULL) {
+      //     strcpy(serverBuf, filename);
+      //     printf("passei aqui >> %s\n", filename);
+
+      //   }
+
+      // }
+
+
+
+      // // RECEBER ARQUIVO
+      // if (containsWord(command, "LOREM")) {
+      //   // Lê o arquivo e envia ao servidor
+      //   printf("Entrei no SEND>> %s\n", filename);
+
+      //   // int n;
+
+      //   // Verifica se o arquivo existe
+      //   if (access(serverBuf, F_OK) == 0) {
+      //     // Arquivo existe
+
+      //     FILE *file = fopen("recebido.txt", "w");
+      //     if (file == NULL) {
+      //       printf("Error opening file\n");
+      //       return -1;
+      //     }
+      //     // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
+      //     // }
+      //     fwrite(buf, sizeof(char), BUFSIZ, file);
+      //     // if (n < 0) {
+      //     //   logexit("Error reading from socket");
+      //     // }
+
+      //     fclose(file);
+
+      //     printf("file %s overwritten\n", serverBuf);
+
+      //   } else {
+
+      //     //cria o novo arquivo
+      //     FILE *file = fopen("recebido.txt", "w");
+      //     if (file == NULL) {
+      //       printf("Error opening file\n");
+      //       return -1;
+      //     }
+      //     // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
+      //     // }
+      //     size_t elementsWritten = fwrite(buf, sizeof(char), BUFSIZ, file);
+
+      //     if (elementsWritten != BUFSIZ) {
+      //       fprintf(stderr, "Erro ao gravar os dados no arquivo.\n");
+      //       exit(EXIT_FAILURE);
+      //     }
+      //     // if (n < 0) {
+      //     //   logexit("Error reading from socket");
+      //     // }
+      //     fclose(file);
+
+      //     printf("file %s received", serverBuf);
+
+      //   }
+
+      // }
 
       memset(buf, 0, BUFSZ);
 
@@ -262,8 +286,11 @@ int main(int argc, char **argv) {
       // pthread_create( & tid, NULL, client_thread, cdata);
     }
 
-    close(newSocket);
+    printf("disponível\n");
+
   }
+
+  close(newSocket);
   exit(EXIT_SUCCESS);
 }
 

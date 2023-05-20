@@ -12,6 +12,11 @@
 
 #define BUFSZ 1024
 
+//COMANDOS
+#define SELECT "SELECT"
+#define SEND "SEND"
+#define EXIT "EXIT"
+
 void usage(int argc, char **argv) {
   printf("usage: %s <server IP> <server port>\n", argv[0]);
   printf("example: %s 127.0.0.1 51511\n", argv[0]);
@@ -56,6 +61,7 @@ int main(int argc, char **argv) {
   char bufferToSlice[BUFSIZ];
   char filebuffer[BUFSIZ];
   char buf[BUFSZ];       // Buffer para armazenar os dados
+
   memset(buf, 0, BUFSZ); // Inicia Buffer com 0
   size_t count;
 
@@ -66,44 +72,70 @@ int main(int argc, char **argv) {
 
     // Removendo o caractere de nova linha do final da string e colocando o \end
     strcpy(bufferToSlice, userBuf);
-    size_t length = strlen(bufferToSlice);
-    if (length > 0 && bufferToSlice[length - 1] == '\n') {
-      // userBuf[length - 1] = END_CHAR;
-      bufferToSlice[length - 1] = '\0';
-    }
 
-    char *command;
+    //Remove o caracter '\n' e coloca o '\0' no fim da string
+    changeLastCharacter(bufferToSlice, '\n', '\0');
+
+    char *command = userBuf;
     char *filename;
+    char message[BUFSIZ];
+
     command = strtok(bufferToSlice, " ");
     filename = strtok(NULL, " ");
 
+    formatMessage(command, filename, message);
+
+
+    // filename[strlen(filename)-1] = '\0';
+
     stringToUpper(command);
 
+    //SAIR
+    if (containsWord(command, EXIT)) {
+      // Envia pedido de desconexão para o servidor
+      // changeLastCharacter(bufferToSlice, '\0', END_CHAR);
+
+      count = send(newSocket, message, strlen(message) + 1, 0);
+
+      if (count != strlen(message) + 1) { // Erro no envio
+        logexit("send");
+      }
+
+      close(newSocket);
+      break;
+    }
 
     //SELECIONAR ARQUIVO
-    if (command != NULL && (strcmp(command, "SELECT") == 0)) {
-      // Lê o arquivo e envia ao servidor
+    if (containsWord(command, SELECT)) {
+
+
+
+      // removeNullChar(filename);
 
       printf("Comando: %s\n", command);
-      printf("Nome do arquivo: %s\n", filename);
+
 
       FILE *file = fopen(filename, "r");
-      if (file == NULL) {
-        printf("%s does not exist", filename);
-      } else {
-        //Lê o arquivo e guarda no buf para depois enviar ao servidor
-        int n;
+      if (file != NULL) {
+        //Lê o arquivo, guarda os dados no buffer
+        fread(filebuffer, sizeof(char), BUFSZ, file);
 
-        while ((n = fread(filebuffer, sizeof(char), BUFSZ, file)) > 0) {
-          if (write(newSocket, filebuffer, n) < 0) {
-            logexit("Error writing to socket");
-          }
+        // Avisa o servidor que um arquivo foi selecionado????
+        //Remove o '\n' e coloca o 'EOT'
+        changeLastCharacter(bufferToSlice, '\n', END_CHAR);
+        count = send(newSocket, userBuf, strlen(userBuf) + 1, 0);
+
+        if (count != strlen(userBuf) + 1) { // Erro no envio
+          logexit("send");
         }
-        printf("userBuf:  %s ", userBuf);
+        printf("%s selected\n", filename);
 
-        count = send(newSocket, userBuf, strlen(userBuf) + 1, 0); // Avisa o servidor que um arquivo foi selecionado
-
-        printf("%s selected", filename);
+      } else {
+        if (filename == NULL) {
+          printf("file name not provided\n");
+        } else {
+          printf("%s does not exist\n", filename);
+        }
       }
 
     }
@@ -111,9 +143,20 @@ int main(int argc, char **argv) {
 
 
     //ENVIAR ARQUIVO
-    if (command != NULL && (strcmp(command, "SEND") == 0)) {
+    if (containsWord(command, SEND)) {
+
+      if (filebuffer == NULL) {
+        printf("no file selected!\n");
+      }
       printf("Comando: %s\n", command);
-      printf("Nome do arquivo: %s\n", filename);
+
+      //Remove o '\0' e coloca o 'EOT'
+      changeLastCharacter(filebuffer, '\0', END_CHAR);
+
+      //Adiciona o comando e nome do arquino no início da mensagem
+      // char message[BUFSIZ]
+
+      // strcat(message, str1);
 
       count = send(newSocket, filebuffer, strlen(filebuffer) + 1, 0); // Envia dados para o servidor, o terceiro paramero é o tamanho enviado, o /0 é o +1
 
@@ -121,33 +164,13 @@ int main(int argc, char **argv) {
         logexit("send");
       }
 
-    }
-
-
-
-    // memset(buf, 0, BUFSZ);
-    // unsigned total = 0; // Total de bits recebido até o momento
-    // while (1) {
-    //   count = recv(newSocket, buf + total, BUFSZ - total, 0); // Recebendo dado do servidor
-    //   if (count == 0) {
-    //     // Connection terminated.
-    //     break;
-    //   }
-    //   total += count; // Fica recebendo o dado até o dado ser igual a 0
-    // }
-
-    //SAIR
-    if (command != NULL && (strcmp(command, "EXIT") == 0)) {
-
-      close(newSocket);
 
     }
 
 
 
-    // printf("received %u bytes\n", total); // Printa a quantidade de bits e a mensagem
-    puts(buf);
 
   }
+
   exit(EXIT_SUCCESS);
 }

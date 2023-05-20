@@ -3,8 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <arpa/inet.h>
+
+#define END_CHAR '\x04' // Caractere especial '\end' - EOT (End of Transmission)
 
 
 // #define PORT 5151
@@ -107,3 +110,56 @@ int server_sockaddr_init(const char *proto, const char *portstr, struct sockaddr
 
 
 
+void changeLastCharacter(char buffer[], char oldCharacter, char newCharacter){
+    size_t length = strlen(buffer);
+    if (length > 0 && buffer[length - 1] == oldCharacter) {
+      buffer[length - 1] = newCharacter;
+    }
+}
+
+
+void removeNullChar(char *str) {
+    char newStr[strlen(str)];
+    int i, j = 0;
+
+    for (i = 0; i < strlen(str); i++) {
+        if (str[i] != END_CHAR) {
+            newStr[j++] = str[i];
+        }
+    }
+
+    newStr[j] = END_CHAR;
+
+    strcpy(str, newStr);
+}
+
+bool containsWord(const char *str, const char *word) {
+    const char *ptr = strstr(str, word);
+    return (ptr != NULL);
+}
+
+void formatMessage(char *command, char *message, char *result) {
+    sprintf(result, "[%s]**[%s]", command, message);
+}
+
+
+void extractCommandAndMessage(const char *input, char *command, char *message) {
+    const char *delimiter = "**";
+    const char *start = strstr(input, '[');
+    const char *end = strstr(input, delimiter);
+
+    if (start && end) {
+        start += strlen("[");
+        size_t commandLength = end - start;
+        strncpy(command, start, commandLength);
+        command[commandLength] = '\0';
+
+        const char *messageStart = end + strlen(delimiter);
+        size_t messageLength = strlen(messageStart) - strlen("]");
+        strncpy(message, messageStart, messageLength);
+        message[messageLength] = '\0';
+    } else {
+        command[0] = '\0';
+        message[0] = '\0';
+    }
+}
