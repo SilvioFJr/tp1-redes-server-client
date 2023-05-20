@@ -180,59 +180,54 @@ int main(int argc, char **argv) {
 
 
 
-      // // RECEBER ARQUIVO
-      // if (containsWord(command, "LOREM")) {
-      //   // Lê o arquivo e envia ao servidor
-      //   printf("Entrei no SEND>> %s\n", filename);
+      // RECEBER ARQUIVO
+      if (containsWord(command, SEND)) {
+        // Verifica se o arquivo existe
+        if (access(filename, F_OK) == 0) {
+          // Arquivo existe
 
-      //   // int n;
+          FILE *file = fopen("recebido.txt", "w");
+          if (file == NULL) {
+            printf("Error opening file\n");
+            return -1;
+          }
+          // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
+          // }
+          fwrite(message, sizeof(char), BUFSIZ, file);
+          // if (n < 0) {
+          //   logexit("Error reading from socket");
+          // }
 
-      //   // Verifica se o arquivo existe
-      //   if (access(serverBuf, F_OK) == 0) {
-      //     // Arquivo existe
+          fclose(file);
 
-      //     FILE *file = fopen("recebido.txt", "w");
-      //     if (file == NULL) {
-      //       printf("Error opening file\n");
-      //       return -1;
-      //     }
-      //     // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
-      //     // }
-      //     fwrite(buf, sizeof(char), BUFSIZ, file);
-      //     // if (n < 0) {
-      //     //   logexit("Error reading from socket");
-      //     // }
+          printf("file %s overwritten\n", filename);
 
-      //     fclose(file);
+        } else {
 
-      //     printf("file %s overwritten\n", serverBuf);
+          //cria o novo arquivo
+          FILE *file = fopen("recebido.txt", "w");
+          if (file == NULL) {
+            printf("Error opening file\n");
+            return -1;
+          }
+          // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
+          // }
+          size_t elementsWritten = fwrite(message, sizeof(char), BUFSIZ, file);
 
-      //   } else {
+          if (elementsWritten != BUFSIZ) {
+            fprintf(stderr, "Erro ao gravar os dados no arquivo.\n");
+            exit(EXIT_FAILURE);
+          }
+          // if (n < 0) {
+          //   logexit("Error reading from socket");
+          // }
+          fclose(file);
 
-      //     //cria o novo arquivo
-      //     FILE *file = fopen("recebido.txt", "w");
-      //     if (file == NULL) {
-      //       printf("Error opening file\n");
-      //       return -1;
-      //     }
-      //     // while ((n = read(clientSocket, buf, BUFSIZ + 1)) > 0) {
-      //     // }
-      //     size_t elementsWritten = fwrite(buf, sizeof(char), BUFSIZ, file);
+          printf("file %s received", filename);
 
-      //     if (elementsWritten != BUFSIZ) {
-      //       fprintf(stderr, "Erro ao gravar os dados no arquivo.\n");
-      //       exit(EXIT_FAILURE);
-      //     }
-      //     // if (n < 0) {
-      //     //   logexit("Error reading from socket");
-      //     // }
-      //     fclose(file);
+        }
 
-      //     printf("file %s received", serverBuf);
-
-      //   }
-
-      // }
+      }
 
       memset(buf, 0, BUFSZ);
 

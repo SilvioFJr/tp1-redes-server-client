@@ -141,24 +141,26 @@ int main(int argc, char **argv) {
 
     //ENVIAR ARQUIVO
     if (containsWord(command, SEND)) {
-
-      if (filebuffer == NULL) {
-        printf("no file selected!\n");
-      }
       printf("Comando: %s\n", command);
 
-      //Remove o '\0' e coloca o 'EOT'
-      changeLastCharacter(filebuffer, '\0', END_CHAR);
+      if (filebuffer != NULL) {
 
-      //Adiciona o comando e nome do arquino no início da mensagem
-      // char message[BUFSIZ]
+        //Remove o '\0' e coloca o 'EOT'
+        // changeLastCharacter(filebuffer, '\0', END_CHAR);
 
-      // strcat(message, str1);
+        //Adiciona o comando e nome do arquino no início da mensagem
+        // char message[BUFSIZ]
+        // strcat(message, str1);
 
-      count = send(newSocket, filebuffer, strlen(filebuffer) + 1, 0); // Envia dados para o servidor, o terceiro paramero é o tamanho enviado, o /0 é o +1
+        formatMessage(command, filebuffer, message);
 
-      if (count != strlen(filebuffer) + 1) { // Erro no envio
-        logexit("send");
+        count = send(newSocket, message, strlen(message) + 1, 0); // Envia dados para o servidor, o terceiro paramero é o tamanho enviado, o /0 é o +1
+
+        if (count != strlen(message) + 1) { // Erro no envio
+          logexit("send");
+        }
+      } else {
+        printf("no file selected!\n");
       }
 
 
