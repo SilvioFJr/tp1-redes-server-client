@@ -143,21 +143,51 @@ void formatMessage(char *command, char *message, char *result) {
 }
 
 
-void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize) {
-    const char *delimiter = "**";
-    const char *start = strchr(input, '[');
-    const char *end = strstr(input, delimiter);
+// void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize) {
+//     const char *delimiter = "**";
+//     const char *start = strchr(input, '[');
+//     const char *end = strstr(input, delimiter);
 
-    if (start && end && start < end) {
-        start++; // Pula o caractere '['
-        size_t commandLength = end - start - 1;
+//     if (start && end && start < end) {
+//         start++; // Pula o caractere '['
+//         size_t commandLength = end - start - 1;
+//         if (commandLength < commandSize) {
+//             strncpy(command, start, commandLength);
+//             command[commandLength] = '\0';
+//         }
+
+//         const char *messageStart = end + strlen(delimiter);
+//         const char *messageEnd = strchr(messageStart, ']');
+//         if (messageEnd && messageEnd < input + strlen(input)) {
+//             size_t messageLength = messageEnd - messageStart;
+//             if (messageLength < messageSize) {
+//                 strncpy(message, messageStart, messageLength);
+//                 message[messageLength] = '\0';
+//             }
+//         }
+//     } else {
+//         command[0] = '\0';
+//         message[0] = '\0';
+//     }
+// }
+
+
+void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize) {
+    const char *commandStart = strchr(input, '[');
+    const char *commandEnd = strstr(input, "]*");
+    const char *messageStart = strstr(input, "*[");
+    const char *messageEnd = strrchr(input, ']');
+
+    if (commandStart && commandEnd && messageStart && messageEnd && commandStart < commandEnd && messageStart < messageEnd) {
+        commandStart++; // Pula o caractere '['
+        size_t commandLength = commandEnd - commandStart;
         if (commandLength < commandSize) {
-            strncpy(command, start, commandLength);
+            strncpy(command, commandStart, commandLength);
             command[commandLength] = '\0';
         }
 
-        const char *messageStart = end + strlen(delimiter);
-        size_t messageLength = strlen(messageStart) - strlen("]");
+        messageStart += 2; // Pula o delimitador "**["
+        size_t messageLength = messageEnd - messageStart;
         if (messageLength < messageSize) {
             strncpy(message, messageStart, messageLength);
             message[messageLength] = '\0';
@@ -167,4 +197,8 @@ void extractCommandAndMessage(const char *input, char *command, char *message, s
         message[0] = '\0';
     }
 }
+
+
+
+
 

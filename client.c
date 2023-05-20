@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     //SAIR
     if (containsWord(command, EXIT)) {
       // Envia pedido de desconexão para o servidor
-      // changeLastCharacter(bufferToSlice, '\0', END_CHAR);
+      changeLastCharacter(bufferToSlice, '\0', END_CHAR);
 
       count = send(newSocket, message, strlen(message) + 1, 0);
 
@@ -107,9 +107,6 @@ int main(int argc, char **argv) {
 
     //SELECIONAR ARQUIVO
     if (containsWord(command, SELECT)) {
-
-
-
       // removeNullChar(filename);
 
       printf("Comando: %s\n", command);
@@ -122,10 +119,10 @@ int main(int argc, char **argv) {
 
         // Avisa o servidor que um arquivo foi selecionado????
         //Remove o '\n' e coloca o 'EOT'
-        changeLastCharacter(bufferToSlice, '\n', END_CHAR);
-        count = send(newSocket, userBuf, strlen(userBuf) + 1, 0);
+        // changeLastCharacter(bufferToSlice, '\n', END_CHAR);
+        count = send(newSocket, message, strlen(message) + 1, 0);
 
-        if (count != strlen(userBuf) + 1) { // Erro no envio
+        if (count != strlen(message) + 1) { // Erro no envio
           logexit("send");
         }
         printf("%s selected\n", filename);

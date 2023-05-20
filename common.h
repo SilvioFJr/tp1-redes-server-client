@@ -32,4 +32,4 @@ bool containsWord(const char *str, const char *word);
 
 void formatMessage(char *command, char *message, char *result);
 
-void extractCommandAndMessage(const char *input, char *command, char *message);
+void extractCommandAndMessage(const char *input, char *command, char *message, size_t commandSize, size_t messageSize);

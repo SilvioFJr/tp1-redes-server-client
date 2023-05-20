@@ -143,13 +143,25 @@ int main(int argc, char **argv) {
 
         //Trata a mensagem recebida
         printf("[receved]:  %s\n", buf);
+
+        // //teste end char
+        // if (containsWord(buf, "\n")) {
+        //   printf("sim END_CHAR\n");
+        //   // close(clientSocket);
+        //   // break;
+        // } else if(containsWord(buf, "\0")){
+        //   printf("sim '\0'\n");
+        // }else{
+        //   printf("não\n");
+        // }
+
+
         removeNullChar(buf);
-        extractCommandAndMessage(buf, command, message);
+        extractCommandAndMessage(buf, command, message, BUFSIZ, BUFSIZ);
         printf("[command]:  %s\n", command);
         printf("[message]:  %s\n", message);
 
         stringToUpper(command);
-
         //Desconectar cliente
         if (containsWord(command, EXIT)) {
           printf("connection closed\n");
