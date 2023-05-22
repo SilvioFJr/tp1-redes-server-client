@@ -17,7 +17,7 @@
 #define SEND "SEND"
 #define EXIT "EXIT"
 
-void usage(int argc, char **argv) {
+void usage(char **argv) {
   printf("usage: %s <server IP> <server port>\n", argv[0]);
   printf("example: %s 127.0.0.1 51511\n", argv[0]);
   exit(EXIT_FAILURE);
@@ -34,12 +34,12 @@ void stringToUpper(char *str) {
 
 int main(int argc, char **argv) {
   if (argc < 3) { // Verifica ip correto
-    usage(argc, argv);
+    usage(argv);
   }
 
   struct sockaddr_storage storage; // Parseia qual o endereço do servidor, esse ponteiro vai armazenar
   if (addrparse(argv[1], argv[2], &storage) != 0) {
-    usage(argc, argv);
+    usage(argv);
   }
 
   int newSocket = socket(storage.ss_family, SOCK_STREAM, 0); // Cria Socket, ss_family, é a família do IP
@@ -85,9 +85,6 @@ int main(int argc, char **argv) {
 
     formatMessage(command, filename, message);
 
-
-    // filename[strlen(filename)-1] = '\0';
-
     stringToUpper(command);
 
     //SAIR
@@ -108,40 +105,36 @@ int main(int argc, char **argv) {
 
     //SELECIONAR ARQUIVO
     if (containsWord(command, SELECT)) {
-      // removeNullChar(filename);
 
-      printf("Comando: %s\n", command);
+      if (isFileTypeValid(filename)) {
+        FILE *file = fopen(filename, "r");
+        if (file != NULL) {
+          //Lê o arquivo, guarda os dados no buffer
+          fread(filebuffer, sizeof(char), BUFSZ, file);
+          fclose(file);
 
+          // Avisa o servidor que um arquivo foi selecionado
+          //Remove o '\n' e coloca o 'EOT'
+          changeLastCharacter(filebuffer, '\0', END_CHAR);
+          count = send(newSocket, message, strlen(message) + 1, 0);
 
-      FILE *file = fopen(filename, "r");
-      if (file != NULL) {
-        //Lê o arquivo, guarda os dados no buffer
-        fread(filebuffer, sizeof(char), BUFSZ, file);
+          if (count != strlen(message) + 1) { // Erro no envio
+            logexit("send");
+          }
+          printf("%s selected\n", filename);
 
-        // Avisa o servidor que um arquivo foi selecionado????
-        //Remove o '\n' e coloca o 'EOT'
-        // changeLastCharacter(filebuffer, '\0', END_CHAR);
-        printf("%s ANTES\n", filebuffer);
-        count = send(newSocket, message, strlen(message) + 1, 0);
-
-
-
-
-
-        if (count != strlen(message) + 1) { // Erro no envio
-          logexit("send");
-        }
-        printf("%s selected\n", filename);
-
-      } else {
-        if (filename == NULL) {
-          printf("file name not provided\n");
         } else {
-          printf("%s does not exist\n", filename);
+          if (filename == NULL) {
+            printf("file name not provided\n");
+          } else {
+            printf("%s does not exist\n", filename);
+          }
         }
+      } else {
+        printf("%s not valid!\n", filename);
       }
-      memset(message, 0, BUFSZ); // Inicia Buffer com 0
 
+      memset(message, 0, BUFSZ);
     }
 
 
@@ -152,17 +145,10 @@ int main(int argc, char **argv) {
 
       if (filebuffer != NULL) {
 
-        //Remove o '\0' e coloca o 'EOT'
-
-        //Adiciona o comando e nome do arquino no início da mensagem
-        // char message[BUFSIZ]
-        // strcat(message, str1);
-
         formatMessage(command, filebuffer, message);
-        printf("%s DEPOIS\n", message);
         changeLastCharacter(message, '\0', END_CHAR);
 
-        count = send(newSocket, message, strlen(message) + 1, 0); // Envia dados para o servidor, o terceiro paramero é o tamanho enviado, o /0 é o +1
+        count = send(newSocket, message, strlen(message) + 1, 0); // Envia dados para o servidor
 
         if (count != strlen(message) + 1) { // Erro no envio
           logexit("send");
@@ -173,13 +159,11 @@ int main(int argc, char **argv) {
       }
 
 
-      memset(message, 0, BUFSZ); // Inicia Buffer com 0
+      memset(message, 0, BUFSZ);
     }
-
-
-
 
   }
 
   exit(EXIT_SUCCESS);
+
 }
