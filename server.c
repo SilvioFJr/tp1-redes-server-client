@@ -99,11 +99,6 @@ int main(int argc, char **argv) {
   char fileName[BUFSIZ];
   char conteudo[BUFSIZ];
   while (1) {
-
-    memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
-    memset(fileName, 0, BUFSZ); // Inicia o buffer com 0 
-    memset(conteudo, 0, BUFSZ); // Inicia o buffer com 0 
-
     recv(clientSocket, buf, BUFSZ - 1, 0);
 
 

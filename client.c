@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
       memset(userBuf, 0, BUFSZ);
       close(newSocket);
       break;
-      
+
     } else if (containsWord(userBuf, "select")) {
       //SELECIONAR ARQUIVO
 
@@ -122,6 +122,8 @@ int main(int argc, char **argv) {
         if (count != strlen(message) + 1) { // Erro no envio
           logexit("send");
         }
+
+        memset(message, 0, BUFSZ);//Limpa o buffer de mensagem
       } else {
         printf("no file selected!\n");
       }
@@ -135,6 +137,8 @@ int main(int argc, char **argv) {
       }
 
       memset(userBuf, 0, BUFSZ);
+      memset(filebuffer, 0, BUFSZ);
+      memset(filename, 0, BUFSZ);
       close(newSocket);
       break;
     }
