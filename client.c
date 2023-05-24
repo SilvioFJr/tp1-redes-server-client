@@ -79,13 +79,12 @@ int main(int argc, char **argv) {
         logexit("send");
       }
 
+      memset(userBuf, 0, BUFSZ);
       close(newSocket);
-      memset(userBuf, 0, BUFSZ); // Limpa o Buffer com 0
       break;
-    }
-
-    //SELECIONAR ARQUIVO
-    if (containsWord(userBuf, "select")) {
+      
+    } else if (containsWord(userBuf, "select")) {
+      //SELECIONAR ARQUIVO
 
       getFileName(userBuf, filename);
 
@@ -110,10 +109,9 @@ int main(int argc, char **argv) {
       }
 
       memset(userBuf, 0, BUFSZ);
-    }
 
-    //ENVIAR ARQUIVO
-    if (containsWord(userBuf, "send file")) {
+    } else if (containsWord(userBuf, "send file")) {
+      //ENVIAR ARQUIVO
       if (filebuffer != NULL) {
         char message[BUFSIZ];
         strcat(message, filename);
@@ -128,6 +126,17 @@ int main(int argc, char **argv) {
         printf("no file selected!\n");
       }
       memset(userBuf, 0, BUFSZ);
+    } else {
+      //Se não houver comando válido, solicita a desconexão do cliente
+      count = send(newSocket, userBuf, strlen(userBuf) + 1, 0);
+
+      if (count != strlen(userBuf) + 1) { // Erro no envio
+        logexit("send");
+      }
+
+      memset(userBuf, 0, BUFSZ);
+      close(newSocket);
+      break;
     }
 
   }

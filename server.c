@@ -98,27 +98,18 @@ int main(int argc, char **argv) {
   while (1) {
 
     char buf[BUFSZ];
-    memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
-
-    int bytesReceived = recv(clientSocket, buf, BUFSZ - 1, 0);
-
-    if (bytesReceived > 0) {
-
-      //Desconectar cliente
-      if (containsWord(buf, "exit")) {
-        printf("connection closed\n");
-        close(clientSocket);
-        break;
-      }
-
-    }
-
-    // RECEBER ARQUIVO
     char fileName[BUFSIZ];
     char conteudo[BUFSIZ];
+    memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
+
+    recv(clientSocket, buf, BUFSZ - 1, 0);
+
+
     separarString(buf, fileName, conteudo);
+
     if (conteudo[0] != '\0') {
-      // Verifica se o arquivo existe
+      // RECEBER ARQUIVO
+        // Verifica se o arquivo existe
       if (fileExists(fileName) == true) {
         createFileWithMessage(conteudo, fileName);
         printf("file %s overwritten\n", fileName);
@@ -126,8 +117,11 @@ int main(int argc, char **argv) {
         createFileWithMessage(conteudo, fileName);
         printf("file %s received\n", fileName);
       }
+    } else {//Desconecta o cliente em casode exit ou comandos errados
+      printf("connection closed\n");
+      close(clientSocket);
+      break;
     }
-    
   }
 
   close(newSocket);
