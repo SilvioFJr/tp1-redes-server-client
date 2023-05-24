@@ -43,3 +43,7 @@ bool fileExists(const char *filename);
 int isFileTypeValid(const char *filename);
 
 void removeNewLine(char *str);
+
+void getFileName(const char* str, char* filename);
+
+void separarString(const char *string, char *fileName, char *conteudo);

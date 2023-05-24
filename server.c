@@ -72,9 +72,6 @@ int main(int argc, char **argv) {
     logexit("bind");
   }
 
-  // if (listen(newSocket, maxQueueLimit) != 0) {
-  // }
-
   // Inicia a escuta por conexões
   if (listen(newSocket, MAX_CLIENTS) == -1) {
     logexit("listen");
@@ -100,70 +97,36 @@ int main(int argc, char **argv) {
     printf("[log]: connection from %s\n", caddrstr);
 
     char buf[BUFSZ];
-    char filename[BUFSIZ];
     memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
 
     while (1) {
-      char command[BUFSIZ];
-      char message[BUFSIZ];
-
       int bytesReceived = recv(clientSocket, buf, BUFSZ - 1, 0);
 
       if (bytesReceived > 0) {
 
-        //teste end char
-        // if (containsWord(buf, END_CHAR)) {
-        //   printf("sim END_CHAR\n");
-        //   // close(clientSocket);
-        //   // break;
-        // } else if(containsWord(buf, "\0")){
-        //   printf("sim '\0'\n");
-        // }else{
-        //   printf("não\n");
-        // }
-
-        //Trata a mensagem recebida
-        removeNullChar(buf);
-        extractCommandAndMessage(buf, command, message);
-
-
-        stringToUpper(command);
-
         //Desconectar cliente
-        if (containsWord(command, EXIT)) {
+        if (containsWord(buf, "exit")) {
           printf("connection closed\n");
           close(clientSocket);
           break;
         }
-      }
 
-      //guardar nome do arquivo......
-      if (containsWord(command, SELECT)) {
-        if (filename != NULL) {
-          strcpy(filename, message);
-          removeNewLine(filename);
-          memset(message, 0, BUFSZ);
-        }
       }
 
       // RECEBER ARQUIVO
-
-      // Verifica se o arquivo existe
-      if (containsWord(command, SEND)) {
-        char *fname = filename;
-        char *MENSAGEM = message;
-
-        if (fileExists(fname) == true) {
-          createFileWithMessage(MENSAGEM, filename);
-          printf("file %s overwritten\n", filename);
+      char fileName[BUFSIZ];
+      char conteudo[BUFSIZ];
+      separarString(buf, fileName, conteudo);
+      if (conteudo[0] != '\0') {
+        // Verifica se o arquivo existe
+        if (fileExists(fileName) == true) {
+          createFileWithMessage(conteudo, fileName);
+          printf("file %s overwritten\n", fileName);
         } else {
-          createFileWithMessage(MENSAGEM, filename);
-          printf("file %s received\n", filename);
+          createFileWithMessage(conteudo, fileName);
+          printf("file %s received\n", fileName);
         }
-
-        memset(message, 0, BUFSZ);
       }
-
       memset(buf, 0, BUFSZ);
     }
   }

@@ -231,6 +231,59 @@ void removeNewLine(char *str) {
     str[length] = '\0';
 }
 
+void getFileName(const char* str, char* filename) {
+    char* token;
+    char tempStr[strlen(str) + 1];
+    strcpy(tempStr, str);
+
+    // Obtém o primeiro token
+    token = strtok(tempStr, " ");
+
+    // Procura o token correspondente ao nome do arquivo
+    while (token != NULL) {
+        if (strcmp(token, "select") != 0) {
+            strcpy(filename, token);
+            break;
+        }
+        token = strtok(NULL, " ");
+    }
+}
+
+void separarString(const char *string, char *fileName, char *conteudo) {
+    const char *delimitadores[] = {".txt", ".c", ".cpp", ".py", ".tex", ".java"};
+    const int numDelimitadores = sizeof(delimitadores) / sizeof(delimitadores[0]);
+
+    const char *posDelimitador = NULL;
+    int i;
+
+    // Encontrar o primeiro delimitador na string
+    for (i = 0; i < numDelimitadores; i++) {
+        posDelimitador = strstr(string, delimitadores[i]);
+        if (posDelimitador != NULL) {
+            break;
+        }
+    }
+
+    if (posDelimitador != NULL) {
+        // Tamanho do fileName
+        size_t tamanhoFileName = posDelimitador - string + strlen(delimitadores[i]);
+
+        // Copiar o fileName
+        strncpy(fileName, string, tamanhoFileName);
+        fileName[tamanhoFileName] = '\0';
+
+        // Copiar o conteúdo
+        strcpy(conteudo, posDelimitador + strlen(delimitadores[i]));
+    } else {
+        // Caso nenhum delimitador seja encontrado, consideramos a string inteira como o fileName e o conteúdo será vazio
+        strcpy(fileName, string);
+        conteudo[0] = '\0';
+    }
+}
+
+
+
+
 
 
 

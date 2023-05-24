@@ -54,73 +54,48 @@ int main(int argc, char **argv) {
 
   char addrstr[BUFSZ];
   addrtostr(addr, addrstr, BUFSZ); // Converte pra printar o endereço
-
   printf("connected to %s\n", addrstr);
 
   char userBuf[BUFSIZ];
-  char bufferToSlice[BUFSIZ];
   char filebuffer[BUFSIZ];
-  char buf[BUFSZ];       // Buffer para armazenar os dados
+  char filename[BUFSIZ];
 
-  memset(buf, 0, BUFSZ); // Inicia Buffer com 0
   size_t count;
 
   while (1) {
-    printf(">> ");
+
+    //Recebe os dados do cliente
     fgets(userBuf, BUFSZ - 1, stdin);
 
-
-    // Removendo o caractere de nova linha do final da string e colocando o \end
-    strcpy(bufferToSlice, userBuf);
-
     //Remove o caracter '\n' e coloca o '\0' no fim da string
-    changeLastCharacter(bufferToSlice, '\n', '\0');
-
-    char *command = userBuf;
-    char *filename;
-    char message[BUFSIZ];
-
-    command = strtok(bufferToSlice, " ");
-    filename = strtok(NULL, " ");
-
-    formatMessage(command, filename, message);
-
-    stringToUpper(command);
+    changeLastCharacter(userBuf, '\n', '\0');
 
     //SAIR
-    if (containsWord(command, EXIT)) {
+    if (containsWord(userBuf, "exit")) {
       // Envia pedido de desconexão para o servidor
-      changeLastCharacter(bufferToSlice, '\0', END_CHAR);
+      count = send(newSocket, userBuf, strlen(userBuf) + 1, 0);
 
-      count = send(newSocket, message, strlen(message) + 1, 0);
-
-      if (count != strlen(message) + 1) { // Erro no envio
+      if (count != strlen(userBuf) + 1) { // Erro no envio
         logexit("send");
       }
 
       close(newSocket);
-      memset(message, 0, BUFSZ); // Inicia Buffer com 0
+      memset(userBuf, 0, BUFSZ); // Limpa o Buffer com 0
       break;
     }
 
     //SELECIONAR ARQUIVO
-    if (containsWord(command, SELECT)) {
+    if (containsWord(userBuf, "select")) {
+
+      getFileName(userBuf, filename);
 
       if (isFileTypeValid(filename)) {
         FILE *file = fopen(filename, "r");
         if (file != NULL) {
-          //Lê o arquivo, guarda os dados no buffer
+          //Lê o arquivo, guarda os dados no buffer de arquivos
           fread(filebuffer, sizeof(char), BUFSZ, file);
           fclose(file);
 
-          // Avisa o servidor que um arquivo foi selecionado
-          //Remove o '\n' e coloca o 'EOT'
-          changeLastCharacter(filebuffer, '\0', END_CHAR);
-          count = send(newSocket, message, strlen(message) + 1, 0);
-
-          if (count != strlen(message) + 1) { // Erro no envio
-            logexit("send");
-          }
           printf("%s selected\n", filename);
 
         } else {
@@ -134,32 +109,25 @@ int main(int argc, char **argv) {
         printf("%s not valid!\n", filename);
       }
 
-      memset(message, 0, BUFSZ);
+      memset(userBuf, 0, BUFSZ);
     }
 
-
-
     //ENVIAR ARQUIVO
-    if (containsWord(command, SEND)) {
-      printf("Comando: %s\n", command);
-
+    if (containsWord(userBuf, "send file")) {
       if (filebuffer != NULL) {
-
-        formatMessage(command, filebuffer, message);
-        changeLastCharacter(message, '\0', END_CHAR);
+        char message[BUFSIZ];
+        strcat(message, filename);
+        strcat(message, filebuffer);
 
         count = send(newSocket, message, strlen(message) + 1, 0); // Envia dados para o servidor
 
         if (count != strlen(message) + 1) { // Erro no envio
           logexit("send");
         }
-        printf("file %s received\n", filename);
       } else {
         printf("no file selected!\n");
       }
-
-
-      memset(message, 0, BUFSZ);
+      memset(userBuf, 0, BUFSZ);
     }
 
   }
