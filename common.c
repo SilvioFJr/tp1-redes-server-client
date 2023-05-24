@@ -108,8 +108,6 @@ int server_sockaddr_init(const char *proto, const char *portstr, struct sockaddr
 }
 
 
-
-
 void changeLastCharacter(char buffer[], char oldCharacter, char newCharacter) {
     size_t length = strlen(buffer);
     if (length > 0 && buffer[length - 1] == oldCharacter) {
@@ -118,55 +116,10 @@ void changeLastCharacter(char buffer[], char oldCharacter, char newCharacter) {
 }
 
 
-void removeNullChar(char *str) {
-    char newStr[strlen(str)];
-    size_t i, j = 0;
-
-    for (i = 0; i < strlen(str); i++) {
-        if (str[i] != END_CHAR) {
-            newStr[j++] = str[i];
-        }
-    }
-
-    newStr[j] = END_CHAR;
-
-    strcpy(str, newStr);
-}
-
 bool containsWord(const char *str, const char *word) {
     const char *ptr = strstr(str, word);
     return (ptr != NULL);
 }
-
-void formatMessage(char *command, char *message, char *result) {
-    sprintf(result, "[%s]**[%s]", command, message);
-}
-
-
-void extractCommandAndMessage(const char *input, char *command, char *message) {
-    const char *commandStart = strchr(input, '[');
-    const char *commandEnd = strstr(input, "]*");
-    const char *messageStart = strstr(input, "*[");
-    const char *messageEnd = strrchr(input, ']');
-
-    if (commandStart && commandEnd && messageStart && messageEnd && commandStart < commandEnd && messageStart < messageEnd) {
-        commandStart++; // Pula o caractere '['
-        size_t commandLength = commandEnd - commandStart;
-        strncpy(command, commandStart, commandLength);
-        command[commandLength] = '\0';
-
-        messageStart += 2; // Pula o delimitador "**["
-        size_t messageLength = messageEnd - messageStart;
-        strncpy(message, messageStart, messageLength);
-        message[messageLength] = '\0';
-    } else {
-        command[0] = '\0';
-        message[0] = '\0';
-    }
-}
-
-
-
 
 void createFileWithMessage(const char *message, const char *filename) {
     // Abre o arquivo no modo de escrita
@@ -182,20 +135,6 @@ void createFileWithMessage(const char *message, const char *filename) {
 
     // Fecha o arquivo
     fclose(file);
-}
-
-void removeNullCharacters(char *string) {
-    int i, j;
-    int len = strlen(string);
-
-    for (i = 0, j = 0; i < len; i++) {
-        if (string[i] != '\0') {
-            string[j] = string[i];
-            j++;
-        }
-    }
-
-    string[j] = '\0';
 }
 
 bool fileExists(const char *filename) {
@@ -226,11 +165,6 @@ int isFileTypeValid(const char *filename) {
     return 0; // Arquivo não tem uma extensão válida
 }
 
-void removeNewLine(char *str) {
-    size_t length = strcspn(str, "\n");
-    str[length] = '\0';
-}
-
 void getFileName(const char* str, char* filename) {
     char* token;
     char tempStr[strlen(str) + 1];
@@ -249,7 +183,7 @@ void getFileName(const char* str, char* filename) {
     }
 }
 
-void separarString(const char *string, char *fileName, char *conteudo) {
+void handleMessage(const char *string, char *fileName, char *conteudo) {
     const char *delimitadores[] = {".txt", ".c", ".cpp", ".py", ".tex", ".java"};
     const int numDelimitadores = sizeof(delimitadores) / sizeof(delimitadores[0]);
 

@@ -95,17 +95,19 @@ int main(int argc, char **argv) {
   addrtostr(caddr, caddrstr, BUFSZ);
   printf("[log]: connection from %s\n", caddrstr);
 
+  char buf[BUFSZ];
+  char fileName[BUFSIZ];
+  char conteudo[BUFSIZ];
   while (1) {
 
-    char buf[BUFSZ];
-    char fileName[BUFSIZ];
-    char conteudo[BUFSIZ];
     memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
+    memset(fileName, 0, BUFSZ); // Inicia o buffer com 0 
+    memset(conteudo, 0, BUFSZ); // Inicia o buffer com 0 
 
     recv(clientSocket, buf, BUFSZ - 1, 0);
 
 
-    separarString(buf, fileName, conteudo);
+    handleMessage(buf, fileName, conteudo);
 
     if (conteudo[0] != '\0') {
       // RECEBER ARQUIVO
