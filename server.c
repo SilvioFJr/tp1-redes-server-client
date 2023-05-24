@@ -82,53 +82,52 @@ int main(int argc, char **argv) {
   addrtostr(addr, addrstr, BUFSZ);
   printf("bound to %s, waiting connections\n", addrstr);
 
+  struct sockaddr_storage clientStorage;
+  struct sockaddr *caddr = (struct sockaddr *)(&clientStorage);
+  socklen_t caddrlen = sizeof(clientStorage);
+
+  int clientSocket = accept(newSocket, caddr, &caddrlen); // socket do cliente
+  if (clientSocket == -1) {
+    logexit("accept");
+  }
+
+  char caddrstr[BUFSZ];
+  addrtostr(caddr, caddrstr, BUFSZ);
+  printf("[log]: connection from %s\n", caddrstr);
+
   while (1) {
-    struct sockaddr_storage clientStorage;
-    struct sockaddr *caddr = (struct sockaddr *)(&clientStorage);
-    socklen_t caddrlen = sizeof(clientStorage);
-
-    int clientSocket = accept(newSocket, caddr, &caddrlen); // socket do cliente
-    if (clientSocket == -1) {
-      logexit("accept");
-    }
-
-    char caddrstr[BUFSZ];
-    addrtostr(caddr, caddrstr, BUFSZ);
-    printf("[log]: connection from %s\n", caddrstr);
 
     char buf[BUFSZ];
     memset(buf, 0, BUFSZ); // Inicia o buffer com 0 
 
-    while (1) {
-      int bytesReceived = recv(clientSocket, buf, BUFSZ - 1, 0);
+    int bytesReceived = recv(clientSocket, buf, BUFSZ - 1, 0);
 
-      if (bytesReceived > 0) {
+    if (bytesReceived > 0) {
 
-        //Desconectar cliente
-        if (containsWord(buf, "exit")) {
-          printf("connection closed\n");
-          close(clientSocket);
-          break;
-        }
-
+      //Desconectar cliente
+      if (containsWord(buf, "exit")) {
+        printf("connection closed\n");
+        close(clientSocket);
+        break;
       }
 
-      // RECEBER ARQUIVO
-      char fileName[BUFSIZ];
-      char conteudo[BUFSIZ];
-      separarString(buf, fileName, conteudo);
-      if (conteudo[0] != '\0') {
-        // Verifica se o arquivo existe
-        if (fileExists(fileName) == true) {
-          createFileWithMessage(conteudo, fileName);
-          printf("file %s overwritten\n", fileName);
-        } else {
-          createFileWithMessage(conteudo, fileName);
-          printf("file %s received\n", fileName);
-        }
-      }
-      memset(buf, 0, BUFSZ);
     }
+
+    // RECEBER ARQUIVO
+    char fileName[BUFSIZ];
+    char conteudo[BUFSIZ];
+    separarString(buf, fileName, conteudo);
+    if (conteudo[0] != '\0') {
+      // Verifica se o arquivo existe
+      if (fileExists(fileName) == true) {
+        createFileWithMessage(conteudo, fileName);
+        printf("file %s overwritten\n", fileName);
+      } else {
+        createFileWithMessage(conteudo, fileName);
+        printf("file %s received\n", fileName);
+      }
+    }
+    
   }
 
   close(newSocket);
