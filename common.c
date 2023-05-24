@@ -1,16 +1,4 @@
-#include <inttypes.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-
-#include <arpa/inet.h>
-
-#define END_CHAR '\x04' // Caractere especial '\end' - EOT (End of Transmission)
-
-
-// #define PORT 5151
+#include "common.h"
 
 void logexit(const char *msg) { // Apresenta o erro e sai do programa
     perror(msg);
@@ -212,6 +200,18 @@ void handleMessage(const char *string, char *fileName, char *conteudo) {
         // Caso nenhum delimitador seja encontrado, consideramos a string inteira como o fileName e o conteúdo será vazio
         strcpy(fileName, string);
         conteudo[0] = '\0';
+    }
+}
+
+void replaceNullDelimiter(char *str) {
+    size_t length = strlen(str);
+
+    for (size_t i = 0; i < length; i++) {
+        if (str[i] == '\0') {
+            strcpy(&str[i], "\\end");
+            length = strlen(str);  // Atualiza o tamanho da string
+            break;
+        }
     }
 }
 

@@ -1,20 +1,23 @@
-#pragma once
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include <arpa/inet.h>
+#include <inttypes.h>
+#include <ctype.h>
 
-#include <stdbool.h> 
-
-#define END_CHAR '\x04' // Caractere especial '\end' - EOT (End of Transmission)
-
-//COMANDOS
-#define SELECT "SELECT"
-#define SEND "SEND"
-#define EXIT "EXIT"
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 
+// Tamanho do buffer
+#define BUFSZ 1024
 
+//número máximo de clientes
+#define MAX_CLIENTS 1
 
 void logexit(const char *msg);
 
@@ -37,3 +40,5 @@ int isFileTypeValid(const char *filename);
 void getFileName(const char* str, char* filename);
 
 void handleMessage(const char *string, char *fileName, char *conteudo);
+
+void replaceNullDelimiter(char *str);

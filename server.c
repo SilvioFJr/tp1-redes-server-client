@@ -1,41 +1,9 @@
 #include "common.h"
 
-#include <pthread.h> // Criação das threads
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include <ctype.h>
-
-// Tamanho do buffer
-#define BUFSZ 9000
-
-// Tamanho da fila de conexões pendentes
-#define maxQueueLimit 128
-
-
-//COMANDOS
-#define SELECT "SELECT"
-#define SEND "SEND"
-#define EXIT "EXIT"
-
-//número máximo de clientes
-#define MAX_CLIENTS 1
-
 void usage(char **argv) {
   printf("usage: %s <v4|v6> <server port>\n", argv[0]);
   printf("example: %s v4 51511\n", argv[0]);
   exit(EXIT_FAILURE);
-}
-void stringToUpper(char *str) {
-  int i = 0;
-  while (str[i] != '\0') {
-    str[i] = toupper(str[i]);
-    i++;
-  }
 }
 
 struct client_data {
@@ -101,7 +69,6 @@ int main(int argc, char **argv) {
   while (1) {
     recv(clientSocket, buf, BUFSZ - 1, 0);
 
-
     handleMessage(buf, fileName, conteudo);
 
     if (conteudo[0] != '\0') {
@@ -114,7 +81,7 @@ int main(int argc, char **argv) {
         createFileWithMessage(conteudo, fileName);
         printf("file %s received\n", fileName);
       }
-    } else {//Desconecta o cliente em casode exit ou comandos errados
+    } else {//Desconecta o cliente em caso de exit ou comandos errados
       printf("connection closed\n");
       close(clientSocket);
       break;

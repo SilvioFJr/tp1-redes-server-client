@@ -1,34 +1,9 @@
 #include "common.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-
-#include <ctype.h>
-
-#define BUFSZ 1024
-
-//COMANDOS
-#define SELECT "SELECT"
-#define SEND "SEND"
-#define EXIT "EXIT"
-
 void usage(char **argv) {
   printf("usage: %s <server IP> <server port>\n", argv[0]);
   printf("example: %s 127.0.0.1 51511\n", argv[0]);
   exit(EXIT_FAILURE);
-}
-
-void stringToUpper(char *str) {
-  int i = 0;
-  while (str[i] != '\0') {
-    str[i] = toupper(str[i]);
-    i++;
-  }
 }
 
 
@@ -116,6 +91,8 @@ int main(int argc, char **argv) {
         char message[BUFSIZ];
         strcat(message, filename);
         strcat(message, filebuffer);
+
+        replaceNullDelimiter(message);
 
         count = send(newSocket, message, strlen(message) + 1, 0); // Envia dados para o servidor
 
