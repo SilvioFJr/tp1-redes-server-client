@@ -1,13 +1,4 @@
-#include <inttypes.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <arpa/inet.h>
-
-
-// #define PORT 5151
+#include "common.h"
 
 void logexit(const char *msg) { // Apresenta o erro e sai do programa
     perror(msg);
@@ -103,3 +94,132 @@ int server_sockaddr_init(const char *proto, const char *portstr, struct sockaddr
         return -1;
     }
 }
+
+
+void changeLastCharacter(char buffer[], char oldCharacter, char newCharacter) {
+    size_t length = strlen(buffer);
+    if (length > 0 && buffer[length - 1] == oldCharacter) {
+        buffer[length - 1] = newCharacter;
+    }
+}
+
+
+bool containsWord(const char *str, const char *word) {
+    const char *ptr = strstr(str, word);
+    return (ptr != NULL);
+}
+
+void createFileWithMessage(const char *message, const char *filename) {
+    // Abre o arquivo no modo de escrita
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+
+    // Escreve a mensagem no arquivo
+    fprintf(file, "%s", message);
+
+    // Fecha o arquivo
+    fclose(file);
+}
+
+bool fileExists(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file != NULL) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+int isFileTypeValid(const char *filename) {
+    const char *validExtensions[] = {".txt", ".c", ".cpp", ".py", ".tex", ".java"};
+    const int numExtensions = sizeof(validExtensions) / sizeof(validExtensions[0]);
+
+    const char *fileExtension = strrchr(filename, '.');
+
+    if (fileExtension != NULL) {
+        for (int i = 0; i < numExtensions; i++) {
+            if (strcmp(fileExtension, validExtensions[i]) == 0) {
+                return 1; // Arquivo tem uma extensão válida
+            }
+        }
+    }
+
+    return 0; // Arquivo não tem uma extensão válida
+}
+
+void getFileName(const char* str, char* filename) {
+    char* token;
+    char tempStr[strlen(str) + 1];
+    strcpy(tempStr, str);
+
+    // Obtém o primeiro token
+    token = strtok(tempStr, " ");
+
+    // Procura o token correspondente ao nome do arquivo
+    while (token != NULL) {
+        if (strcmp(token, "select") != 0) {
+            strcpy(filename, token);
+            break;
+        }
+        token = strtok(NULL, " ");
+    }
+}
+
+void handleMessage(const char *string, char *fileName, char *conteudo) {
+    const char *delimitadores[] = {".txt", ".c", ".cpp", ".py", ".tex", ".java"};
+    const int numDelimitadores = sizeof(delimitadores) / sizeof(delimitadores[0]);
+
+    const char *posDelimitador = NULL;
+    int i;
+
+    // Encontrar o primeiro delimitador na string
+    for (i = 0; i < numDelimitadores; i++) {
+        posDelimitador = strstr(string, delimitadores[i]);
+        if (posDelimitador != NULL) {
+            break;
+        }
+    }
+
+    if (posDelimitador != NULL) {
+        // Tamanho do fileName
+        size_t tamanhoFileName = posDelimitador - string + strlen(delimitadores[i]);
+
+        // Copiar o fileName
+        strncpy(fileName, string, tamanhoFileName);
+        fileName[tamanhoFileName] = '\0';
+
+        // Copiar o conteúdo
+        strcpy(conteudo, posDelimitador + strlen(delimitadores[i]));
+    } else {
+        // Caso nenhum delimitador seja encontrado, consideramos a string inteira como o fileName e o conteúdo será vazio
+        strcpy(fileName, string);
+        conteudo[0] = '\0';
+    }
+}
+
+void replaceNullDelimiter(char *str) {
+    size_t length = strlen(str);
+
+    for (size_t i = 0; i < length; i++) {
+        if (str[i] == '\0') {
+            strcpy(&str[i], "\\end");
+            length = strlen(str);  // Atualiza o tamanho da string
+            break;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+

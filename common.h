@@ -1,15 +1,44 @@
-#pragma once
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include <arpa/inet.h>
+#include <inttypes.h>
+#include <ctype.h>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+
+// Tamanho do buffer
+#define BUFSZ 1024
+
+//número máximo de clientes
+#define MAX_CLIENTS 1
 
 void logexit(const char *msg);
 
-int addrparse(const char *addrstr, const char *portstr,
-              struct sockaddr_storage *storage);
+int addrparse(const char *addrstr, const char *portstr, struct sockaddr_storage *storage);
 
 void addrtostr(const struct sockaddr *addr, char *str, size_t strsize);
 
-int server_sockaddr_init(const char *proto, const char *portstr,
-                         struct sockaddr_storage *storage);
+int server_sockaddr_init(const char *proto, const char *portstr, struct sockaddr_storage *storage);
+
+void changeLastCharacter(char *buffer, char oldCharacter, char newCharacter);
+
+bool containsWord(const char *str, const char *word);
+
+void createFileWithMessage(const char *message, const char *filename);
+
+bool fileExists(const char *filename);
+
+int isFileTypeValid(const char *filename);
+
+void getFileName(const char* str, char* filename);
+
+void handleMessage(const char *string, char *fileName, char *conteudo);
+
+void replaceNullDelimiter(char *str);

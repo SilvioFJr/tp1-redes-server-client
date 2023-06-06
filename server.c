@@ -1,21 +1,6 @@
 #include "common.h"
 
-#include <pthread.h> // Criação das threads
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
-// Tamanho do buffer
-#define BUFSZ 1024
-
-// Tamanho da fila de conexões pendentes
-#define maxQueueLimit 128
-
-
-void usage(int argc, char **argv) {
+void usage(char **argv) {
   printf("usage: %s <v4|v6> <server port>\n", argv[0]);
   printf("example: %s v4 51511\n", argv[0]);
   exit(EXIT_FAILURE);
@@ -26,50 +11,16 @@ struct client_data {
   struct sockaddr_storage storage;
 };
 
-void *client_thread(void *data) {
-  struct client_data *cdata = (struct client_data *)data;
-  struct sockaddr *caddr = (struct sockaddr *)(&cdata->storage);
-
-  char caddrstr[BUFSZ];
-  addrtostr(caddr, caddrstr, BUFSZ);
-  printf("[log] connection from %s\n", caddrstr);
-
-  char buf[BUFSZ];
-  memset(buf, 0, BUFSZ);
-  size_t count = recv(cdata->clientSocket, buf, BUFSZ - 1, 0);
-
-  if ((int)count > 500) { // here
-    printf("\nSua mensagem ultrapassou 500 charracteres, você será desconectado\n");
-    close(cdata->clientSocket);
-
-    pthread_exit(EXIT_SUCCESS);
-  } else {
-    printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
-    if (0 == strcmp(buf, "##kill\n")) {
-      exit(0);
-    }
-
-    sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
-    count = send(cdata->clientSocket, buf, strlen(buf) + 1, 0);
-    if (count != strlen(buf) + 1) {
-      logexit("send");
-    }
-    close(cdata->clientSocket);
-
-    pthread_exit(EXIT_SUCCESS);
-  }
-}
-
 int main(int argc, char **argv) {
 
   if (argc < 3) {
-    usage(argc, argv);
+    usage(argv);
   }
 
   struct sockaddr_storage storage;
 
   if (server_sockaddr_init(argv[1], argv[2], &storage) != 0) {
-    usage(argc, argv);
+    usage(argv);
   }
 
   int newSocket = socket(storage.ss_family, SOCK_STREAM, 0);
@@ -89,60 +40,55 @@ int main(int argc, char **argv) {
     logexit("bind");
   }
 
-  if (listen(newSocket, maxQueueLimit) != 0) {
+  // Inicia a escuta por conexões
+  if (listen(newSocket, MAX_CLIENTS) == -1) {
     logexit("listen");
+    exit(EXIT_FAILURE);
   }
 
   char addrstr[BUFSZ];
   addrtostr(addr, addrstr, BUFSZ);
   printf("bound to %s, waiting connections\n", addrstr);
 
-  while (1) {
-    struct sockaddr_storage clientStorage;
-    struct sockaddr *caddr = (struct sockaddr *)(&clientStorage);
-    socklen_t caddrlen = sizeof(clientStorage);
+  struct sockaddr_storage clientStorage;
+  struct sockaddr *caddr = (struct sockaddr *)(&clientStorage);
+  socklen_t caddrlen = sizeof(clientStorage);
 
-    int clientSocket = accept(newSocket, caddr, &caddrlen); // socket do cliente
-    if (clientSocket == -1) {
-      logexit("accept");
-    }
-
-    char caddrstr[BUFSZ];
-    addrtostr(caddr, caddrstr, BUFSZ);
-    printf("[log] connection from %s\n", caddrstr);
-
-    //Selecionar arquivo
-    //Processar arquivo inserido
-    //Enviar arquivo
-
-    char buf[BUFSZ];
-    memset(buf, 0, BUFSZ);
-    size_t count = recv(clientSocket, buf, BUFSZ - 1, 0);
-
-    printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
-    if (0 == strcmp(buf, "##kill\n")) {
-      exit(0);
-    }
-
-    sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
-    count = send(clientSocket, buf, strlen(buf) + 1, 0);
-    if (count != strlen(buf) + 1) {
-      logexit("send");
-    }
-    close(clientSocket);
-
-    // Inicia a criação de threads
-
-    // struct client_data * cdata = malloc(sizeof( * cdata));
-    // if (!cdata) {
-    //   logexit("malloc");
-    // }
-    // cdata -> clientSocket = clientSocket;
-    // memcpy( &(cdata -> storage), & clientStorage, sizeof(clientStorage));
-
-    // pthread_t tid;
-    // pthread_create( & tid, NULL, client_thread, cdata);
+  int clientSocket = accept(newSocket, caddr, &caddrlen); // socket do cliente
+  if (clientSocket == -1) {
+    logexit("accept");
   }
 
+  char caddrstr[BUFSZ];
+  addrtostr(caddr, caddrstr, BUFSZ);
+  printf("[log]: connection from %s\n", caddrstr);
+
+  char buf[BUFSZ];
+  char fileName[BUFSIZ];
+  char conteudo[BUFSIZ];
+  while (1) {
+    recv(clientSocket, buf, BUFSZ - 1, 0);
+
+    handleMessage(buf, fileName, conteudo);
+
+    if (conteudo[0] != '\0') {
+      // RECEBER ARQUIVO
+        // Verifica se o arquivo existe
+      if (fileExists(fileName) == true) {
+        createFileWithMessage(conteudo, fileName);
+        printf("file %s overwritten\n", fileName);
+      } else {
+        createFileWithMessage(conteudo, fileName);
+        printf("file %s received\n", fileName);
+      }
+    } else {//Desconecta o cliente em caso de exit ou comandos errados
+      printf("connection closed\n");
+      close(clientSocket);
+      break;
+    }
+  }
+
+  close(newSocket);
   exit(EXIT_SUCCESS);
 }
+
