@@ -40,5 +40,3 @@ int isFileTypeValid(const char *filename);
 void getFileName(const char* str, char* filename);
 
 void handleMessage(const char *string, char *fileName, char *conteudo);
-
-void replaceNullDelimiter(char *str);

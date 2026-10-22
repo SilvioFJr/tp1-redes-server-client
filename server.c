@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
   // Inicia a escuta por conexões
   if (listen(newSocket, MAX_CLIENTS) == -1) {
     logexit("listen");
-    exit(EXIT_FAILURE);
   }
 
   char addrstr[BUFSZ];
@@ -63,25 +62,30 @@ int main(int argc, char **argv) {
   addrtostr(caddr, caddrstr, BUFSZ);
   printf("[log]: connection from %s\n", caddrstr);
 
-  char buf[BUFSZ];
-  char fileName[BUFSIZ];
-  char conteudo[BUFSIZ];
+  char buf[2 * BUFSZ];
+  char fileName[2 * BUFSZ];
+  char conteudo[2 * BUFSZ];
   while (1) {
-    recv(clientSocket, buf, BUFSZ - 1, 0);
+    ssize_t received = recv(clientSocket, buf, sizeof(buf) - 1, 0);
+    if (received <= 0) { // Cliente desconectou ou erro
+      printf("connection closed\n");
+      close(clientSocket);
+      break;
+    }
+    buf[received] = '\0';
 
     handleMessage(buf, fileName, conteudo);
 
     if (conteudo[0] != '\0') {
-      // RECEBER ARQUIVO
-        // Verifica se o arquivo existe
-      if (fileExists(fileName) == true) {
-        createFileWithMessage(conteudo, fileName);
-        printf("file %s overwritten\n", fileName);
-      } else {
-        createFileWithMessage(conteudo, fileName);
-        printf("file %s received\n", fileName);
+      // RECEBER ARQUIVO (só no diretório atual: recusa caminhos)
+      if (strchr(fileName, '/') != NULL) {
+        printf("invalid file name %s\n", fileName);
+        continue;
       }
-    } else {//Desconecta o cliente em caso de exit ou comandos errados
+      bool existed = fileExists(fileName);
+      createFileWithMessage(conteudo, fileName);
+      printf(existed ? "file %s overwritten\n" : "file %s received\n", fileName);
+    } else { // Desconecta o cliente em caso de exit ou comandos errados
       printf("connection closed\n");
       close(clientSocket);
       break;

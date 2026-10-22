@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "socket.h": "c",
-        "cstdlib": "c",
-        "inet.h": "c",
-        "ctype.h": "c",
-        "common.h": "c"
-    }
-}

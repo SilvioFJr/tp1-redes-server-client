@@ -31,97 +31,80 @@ int main(int argc, char **argv) {
   addrtostr(addr, addrstr, BUFSZ); // Converte pra printar o endereço
   printf("connected to %s\n", addrstr);
 
-  char userBuf[BUFSIZ];
-  char filebuffer[BUFSIZ];
-  char filename[BUFSIZ];
+  char userBuf[BUFSZ];
+  char filebuffer[BUFSZ];
+  char filename[BUFSZ];
+  char message[2 * BUFSZ];
+  bool fileSelected = false;
 
-  size_t count;
+  ssize_t count;
 
   while (1) {
 
-    //Recebe os dados do cliente
-    fgets(userBuf, BUFSZ - 1, stdin);
+    // Lê o comando do usuário; encerra se a entrada acabar (EOF)
+    if (fgets(userBuf, BUFSZ, stdin) == NULL) {
+      strcpy(userBuf, "exit");
+    }
 
-    //Remove o caracter '\n' e coloca o '\0' no fim da string
+    // Remove o caracter '\n' do fim da string
     changeLastCharacter(userBuf, '\n', '\0');
 
-    //SAIR
     if (containsWord(userBuf, "exit")) {
-      // Envia pedido de desconexão para o servidor
+      // SAIR: envia pedido de desconexão para o servidor
       count = send(newSocket, userBuf, strlen(userBuf) + 1, 0);
-
-      if (count != strlen(userBuf) + 1) { // Erro no envio
+      if (count != (ssize_t)(strlen(userBuf) + 1)) {
         logexit("send");
       }
-
-      memset(userBuf, 0, BUFSZ);
-      close(newSocket);
       break;
 
     } else if (containsWord(userBuf, "select")) {
-      //SELECIONAR ARQUIVO
-
+      // SELECIONAR ARQUIVO
+      filename[0] = '\0';
       getFileName(userBuf, filename);
 
-      if (isFileTypeValid(filename)) {
-        FILE *file = fopen(filename, "r");
-        if (file != NULL) {
-          //Lê o arquivo, guarda os dados no buffer de arquivos
-          fread(filebuffer, sizeof(char), BUFSZ, file);
-          fclose(file);
-
-          printf("%s selected\n", filename);
-
-        } else {
-          if (filename == NULL) {
-            printf("file name not provided\n");
-          } else {
-            printf("%s does not exist\n", filename);
-          }
-        }
-      } else {
+      if (filename[0] == '\0') {
+        printf("file name not provided\n");
+      } else if (!isFileTypeValid(filename)) {
         printf("%s not valid!\n", filename);
+      } else {
+        FILE *file = fopen(filename, "r");
+        if (file == NULL) {
+          printf("%s does not exist\n", filename);
+        } else {
+          // Lê o arquivo para o buffer (com espaço para o '\0')
+          size_t n = fread(filebuffer, sizeof(char), BUFSZ - 1, file);
+          filebuffer[n] = '\0';
+          fclose(file);
+          fileSelected = true;
+          printf("%s selected\n", filename);
+        }
       }
-
-      memset(userBuf, 0, BUFSZ);
 
     } else if (containsWord(userBuf, "send file")) {
-      //ENVIAR ARQUIVO
-      if (filebuffer != NULL) {
-        char message[BUFSIZ];
-        strcat(message, filename);
-        strcat(message, filebuffer);
-
-        replaceNullDelimiter(message);
-
-        count = send(newSocket, message, strlen(message) + 1, 0); // Envia dados para o servidor
-
-        if (count != strlen(message) + 1) { // Erro no envio
-          logexit("send");
-        }
-
-        memset(message, 0, BUFSZ);//Limpa o buffer de mensagem
-      } else {
+      // ENVIAR ARQUIVO: mensagem = nome do arquivo + conteúdo
+      if (!fileSelected) {
         printf("no file selected!\n");
+        continue;
       }
-      memset(userBuf, 0, BUFSZ);
-    } else {
-      //Se não houver comando válido, solicita a desconexão do cliente
-      count = send(newSocket, userBuf, strlen(userBuf) + 1, 0);
 
-      if (count != strlen(userBuf) + 1) { // Erro no envio
+      snprintf(message, sizeof(message), "%s%s", filename, filebuffer);
+
+      count = send(newSocket, message, strlen(message) + 1, 0);
+      if (count != (ssize_t)(strlen(message) + 1)) {
         logexit("send");
       }
 
-      memset(userBuf, 0, BUFSZ);
-      memset(filebuffer, 0, BUFSZ);
-      memset(filename, 0, BUFSZ);
-      close(newSocket);
+    } else {
+      // Comando inválido: solicita a desconexão do cliente
+      count = send(newSocket, userBuf, strlen(userBuf) + 1, 0);
+      if (count != (ssize_t)(strlen(userBuf) + 1)) {
+        logexit("send");
+      }
       break;
     }
-
   }
 
+  close(newSocket);
   exit(EXIT_SUCCESS);
 
 }
